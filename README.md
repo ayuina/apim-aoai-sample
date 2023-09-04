@@ -1,10 +1,11 @@
 # apim-aoai-sample
 
-## はじめに
+Azure OpenAI を API Management で保護する構成を、IaC で一括デプロイするサンプルです。
 
-Azure OpenAI を API Management で保護するサンプルです。
+## 概要
 
-以下のリソースがデプロイされます。
+![overview](./images/overview.png)
+
 - Azure OpenAI Service 
 - Azure API Management
     - Azure OpenAI Service をバックエンドとする API 定義
@@ -13,7 +14,6 @@ Azure OpenAI を API Management で保護するサンプルです。
 - Azure Log Analytics
     - Azure OpenAI および API Management のリソースログ（診断ログ）の出力先
     - Application Insights のワークスペースとしても利用
-
 
 ## Open AI の仕様書をダウンロードする
 
@@ -48,7 +48,10 @@ az account set -s $subscription
 
 $region = 'japaneast'
 $prefix = 'demo0904'
-az deployment sub create -f ./infra/main.bicep -l $region -p prefix="$prefix" region="$region" aoaiRegion="$region"
+$rg = "${prefix}-rg"
+
+az group create -n $rg -l $region
+az deployment group create -f ./infra/main.bicep -g $rg -p prefix=$prefix region=$region aoaiRegion=$region
 ```
 
 

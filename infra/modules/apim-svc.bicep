@@ -30,7 +30,7 @@ resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
   }
   properties: {
     publisherName: prefix
-    publisherEmail: '${prefix}@${prefix}.local'
+    publisherEmail: '${prefix}@${prefix}.sample.com'
   }
 
   resource ailogger 'loggers' = {
@@ -41,16 +41,6 @@ resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
       credentials: {
         instrumentationKey: appinsights.properties.InstrumentationKey
       }
-    }
-  }
-  
-  resource diag 'diagnostics' = {
-    name: 'applicationinsights'
-    properties: {
-      loggerId: ailogger.id
-      alwaysLog: 'allErrors'
-      logClientIp: true
-      verbosity: 'verbose'
     }
   }
 }
@@ -81,3 +71,4 @@ resource apimDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
 }
 
 output apiManagementName string = apiman.name
+output appinsightsLoggerName string = apiman::ailogger.name

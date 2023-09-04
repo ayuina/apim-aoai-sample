@@ -1,4 +1,5 @@
 param apimName string
+param aiLoggerName string
 param aoaiName string
 
 var aoaiSpec = loadTextContent('./apim-openai-interface.json')
@@ -7,6 +8,10 @@ var aoaikeyNamedValueRef = 'AzureOpenAIKey'
 
 resource apim 'Microsoft.ApiManagement/service@2023-03-01-preview' existing = {
   name: apimName
+
+  resource aiLogger 'loggers' existing = {
+    name: aiLoggerName
+  }
 }
 
 resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
@@ -36,7 +41,7 @@ resource openaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = 
     format: 'openapi'
     serviceUrl: '${aoai.properties.endpoint}openai'
     subscriptionKeyParameterNames: {
-      header: 'Ocp-Apim-Subscription-Key'
+      header: 'api-key'
     }
     value: aoaiSpec
   }
@@ -48,4 +53,37 @@ resource openaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = 
       value: policySpec
     }
   }
-}
+
+  resource diag 'diagnostics' = {
+    name: 'applicationinsights'
+    properties: {
+      loggerId: apim::aiLogger.id
+      alwaysLog: 'allErrors'
+      logClientIp: true
+      verbosity: 'verbose'
+      sampling: {
+        percentage: 100
+        samplingType: 'fixed'
+      }
+      frontend: {
+        request: {
+          body: { bytes: 8192 }
+          headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
+        }
+        response: {
+          body: { bytes: 8192 }
+          headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
+        }
+      }
+      backend: {
+        request: {
+          body: { bytes: 8192 }
+          headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
+        }
+        response: {
+          body: { bytes: 8192 }
+          headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
+        }
+      }
+    }
+  }}
