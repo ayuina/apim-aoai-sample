@@ -1,12 +1,22 @@
-# apim-aoai-sample
+# Call OpenAI Service via API Management
 
-Azure OpenAI を API Management で保護する構成を、IaC で一括デプロイするサンプルです。
+Azure OpenAI を API Management で保護する構成を、IaC で一括デプロイするためのサンプルです。
+
+## はじめに
+
+[こちらのリファレンスアーキテクチャ](https://learn.microsoft.com/ja-jp/azure/architecture/ai-ml/openai/architecture/log-monitor-azure-openai)に記述されている通り、
+以下の理由から API Management を介して Azure OpenAI Service を利用することがあります。
+
+- Azure OpenAI Service 単体では出力できるログに制限がある
+- OpenAI サービス用の API キーをすべてのクライアントアプリケーションで共有する
+
+構成する方法は[こちら](https://learn.microsoft.com/en-us/semantic-kernel/deploy/use-ai-apis-with-api-management)に記載があるのですが、何度も手作業で構築するのが面倒なので自動化に挑戦してみました。
 
 ## 概要
 
 ![overview](./images/overview.png)
 
-- Azure OpenAI Service 
+- Azure OpenAI Service
 - Azure API Management
     - Azure OpenAI Service をバックエンドとする API 定義
 - Azure Application Insights
@@ -18,6 +28,9 @@ Azure OpenAI を API Management で保護する構成を、IaC で一括デプ�
 ## Open AI の仕様書をダウンロードする
 
 API Management にインポートするための OpenAPI 仕様をダウンロードするスクリプトは以下のようになります。
+本リポジトリにも[ダウンロード済みのもの](./infra/modules/apim-openai-interface.json)が含めてありますので、API 仕様のバージョンを確認して変更不要であればこの手順は飛ばしても構いません。
+
+バージョンを変更したい場合は下記のスクリプトを適宜修正して実行してください。
 利用可能な API のバージョンについては [リファレンス](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/reference)を参照してください。
 
 ```powershell
@@ -57,6 +70,7 @@ az deployment group create -f ./infra/main.bicep -g $rg -p prefix=$prefix region
 
 ## 参考情報
 
+- [Implement logging and monitoring for Azure OpenAI models](https://learn.microsoft.com/ja-jp/azure/architecture/ai-ml/openai/architecture/log-monitor-azure-openai)
 - [Protect your Azure OpenAI API keys with Azure API Management](https://learn.microsoft.com/en-us/semantic-kernel/deploy/use-ai-apis-with-api-management)
 - [Azure OpenAI Service REST API reference](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)
 - [Sample APIs for Azure API Management](https://github.com/Azure-Samples/api-management-sample-apis)
