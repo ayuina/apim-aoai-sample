@@ -114,9 +114,12 @@ API Management の設定で Application Insights のロガーが登録されて�
 |Application Insights|画面イメージ|
 |---|---|
 |Kusto ログ|![Application Insights Kusto Log query](./images/appinsights-kusto.png)|
+|アプリケーション マップ|![Application Insiths Application Map](./images/appinsights-appmap.png)|
 |ライブメトリック|![Application Insights Live Metric](./images/appinsights-livemetric.png)|
 |E2E トランザクション|![Application Insights End to End transaction](./images/appinsights-e2etransaction.png)|
 |失敗|![Application Insights Failure](./images/appinsights-failure.png)|
+
+
 
 ### Log Analytics Workspace
 
@@ -139,6 +142,12 @@ API Management と同様に診断ログの設定として Log Analytics Workspac
 このため下記のような固定的なデータが得られるのみでボディ部が含まれておらず、プロンプトの履歴を分析したりといったような用途に使えないということになります。
 
 ![Azure OpenAI Resource Log](./images/aoai-diagnostics.png)
+
+## まとめ
+
+ログを取るためだけに API Management を挟むのは若干釈然としない気持ちもないわけではありません。
+ただ API Management を挟みこむことで Azure OpenAI を直接クライアントアプリケーションに露出せず、 VNET による閉域化や Managed ID 認証によるアクセス制御をかけることが可能になります。
+また API Management が提供する各種ポリシー機能を併せて活用したり、OpenAI 以外の API も含めて管理させてやることで価値が大きくなってくるのではないでしょうか。
 
 ## 参考情報
 
