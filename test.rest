@@ -1,0 +1,38 @@
+@model=g35t
+@version=2023-07-01-preview
+
+### CALL via APIM
+POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{$dotenv APIM_KEY}}
+
+{
+  "messages": [
+    {"role":"system","content":"You are an AI assistant that helps people find information."},
+    {"role":"user","content":"Who are you ?"},
+    {"role":"assistant","content":"I am an AI assistant designed to help people find information and answer questions. I don't have a personal identity as I am just a program created to assist users like you. How can I assist you today?"}
+    ],
+  "max_tokens": 800,
+  "temperature": 0.7,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "top_p": 0.95,
+  "stop": null
+}
+
+### CALL OpenAI Direct
+POST https://{{$dotenv AOAI_NAME}}.openai.azure.com/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{$dotenv AOAI_KEY}}
+
+{
+  "messages": [
+    {"role":"system","content":"You are an AI assistant that helps people find information."},
+    {"role":"user","content":"Who are you ?"},
+    {"role":"assistant","content":"I am an AI assistant designed to help people find information and answer questions. I don't have a personal identity as I am just a program created to assist users like you. How can I assist you today?"}
+    ],
+  "max_tokens": 800,
+  "temperature": 0.7,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "top_p": 0.95,
+  "stop": null
+}
