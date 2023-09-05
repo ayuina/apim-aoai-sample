@@ -67,6 +67,78 @@ az group create -n $rg -l $region
 az deployment group create -f ./infra/main.bicep -g $rg -p prefix=$prefix region=$region aoaiRegion=$region
 ```
 
+## テスト実行
+
+API Management にデプロイされた OpenAI 互換の API を呼び出してみます。
+ここでは [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+を使用していますが、Curl や Postman など任意のツールをご利用ください。
+
+```rest
+@model=g35t
+@version=2023-07-01-preview
+
+POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{$dotenv APIM_KEY}}
+
+{
+  "messages": [
+    {"role":"system","content":"You are an AI assistant that helps people find information."},
+    {"role":"user","content":"Who are you ?"}
+  ],
+  "max_tokens": 800,
+  "temperature": 0.7,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "top_p": 0.95,
+  "stop": null
+}
+```
+
+HTTP 200 OK が返ってくれば成功です。
+
+## ログの確認
+
+それでは API Management から Azure Monitor に出力されるログを確認していきましょう。
+
+### Application Insights
+
+まず本命の Application Insights です。
+API Management の設定で Application Insights のロガーが登録されており、
+インポート済みの OpenAI サービス互換の API 定義の設定からそれを参照する形になっているはずです。
+出力設定を変更したい場合はこちらの画面で修正するか、[テンプレート](./infra/modules/apim-openai-apidef.json)を修正して再デプロイしてください。
+
+![Application Insights diagnostics setting](./images/appinsights-setting.png)
+
+この状態で API Management 経由で Azure OpenAI サービスを呼び出すと、ログが取れるだけでなく各種の分析機能も利用可能です。
+
+|Application Insights|画面イメージ|
+|---|---|
+|Kusto ログ|![Application Insights Kusto Log query](./images/appinsights-kusto.png)|
+|ライブメトリック|![Application Insights Live Metric](./images/appinsights-livemetric.png)|
+|E2E トランザクション|![Application Insights End to End transaction](./images/appinsights-e2etransaction.png)|
+|失敗|![Application Insights Failure](./images/appinsights-failure.png)|
+
+### Log Analytics Workspace
+
+次に Log Analytics Workspace です。
+診断ログの設定でログの転送先として Log Analytics Workspace が登録されており、
+API の設定で Log Analytics への記録が有効になっているはずです。
+なおここでは設定していませんが、Appliation Insights と同様に リクエスト/レスポンスのヘッダーやボディをログに含めることも可能です。
+
+![Log Analytics settings](./images/logana-settings.png)
+
+ログの出力先として Log Analytics Workspace を指定しているので、Kusto クエリで検索することが可能です。
+Application Insightsとは異なり各種の分析機能がありませんので、かなりの Kusto 力が要求されることになります。
+
+![Log Analytics Kusto query](./images/logana-kusto.png)
+
+### Azure OpenAI から Log Analytics Workspace へ転送されたログ
+
+そもそもの発端となるこちらの Azure OpenAI Service から直接出力されるログも確認しておきましょう。
+API Management と同様に診断ログの設定として Log Analytics Workspace が登録されているのですが、出力項目をより詳細化するようなオプションがありません。
+このため下記のような固定的なデータが得られるのみでボディ部が含まれておらず、プロンプトの履歴を分析したりといったような用途に使えないということになります。
+
+![Azure OpenAI Resource Log](./images/aoai-diagnostics.png)
 
 ## 参考情報
 
