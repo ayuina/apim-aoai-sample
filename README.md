@@ -47,7 +47,7 @@ API Management にインポートするための OpenAPI 仕様をダウンロ�
 ```powershell
 $version = '2023-07-01-preview'
 $status = $version.EndsWith('-preview') ? 'preview' : 'stable'
-$output = './infra/modules/openai-interface.json'
+$output = './infra/modules/apim-openai-interface.json'
 
 Write-Host "Download OpenAI specification version: $version"
 $specUrl = "https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/${status}/${version}/inference.json"
@@ -70,12 +70,10 @@ az login
 $subscription = '<your subscription id>'
 az account set -s $subscription
 
+$envName = 'demo0906a'
 $region = 'japaneast'
-$prefix = 'demo0904'
-$rg = "${prefix}-rg"
 
-az group create -n $rg -l $region
-az deployment group create -f ./infra/main.bicep -g $rg -p prefix=$prefix region=$region aoaiRegion=$region
+az deployment sub create -l $japaneast -f ./infra/main.bicep -p environmentName=$envName region=$region
 ```
 
 ## テスト実行

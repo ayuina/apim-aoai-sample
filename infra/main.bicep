@@ -1,29 +1,41 @@
+targetScope='subscription'
 
-param prefix string
+param environmentName string
 param region string
-param aoaiRegion string
+param aoaiRegion string = ''
+
+var postfix = toLower(uniqueString(subscription().id, region, environmentName))
+var rgName = 'rg-${environmentName}'
+
+resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: rgName
+  location: region
+}
 
 module monitor './modules/monitor.bicep' = {
   name: 'monitor'
+  scope: rg
   params:{
-    prefix: prefix
+    postfix: postfix
     region: region
   }
 }
 
 module aoai './modules/openai.bicep' = {
   name: 'aoai'
+  scope: rg
   params:{
-    prefix: prefix
-    aoaiRegion: aoaiRegion
+    postfix: postfix
+    aoaiRegion: !empty(aoaiRegion) ? aoaiRegion : region
     logAnalyticsName: monitor.outputs.LogAnalyticsName
   }
 }
 
 module apim './modules/apim-svc.bicep' = {
   name: 'apim'
+  scope: rg
   params:{
-    prefix: prefix
+    postfix: postfix
     region: region
     logAnalyticsName: monitor.outputs.LogAnalyticsName
   }
@@ -31,6 +43,7 @@ module apim './modules/apim-svc.bicep' = {
 
 module aoai_api './modules/apim-openai-apidef.bicep' = {
   name: 'aoai_api'
+  scope: rg
   params:{
     apimName: apim.outputs.apiManagementName
     aiLoggerName: apim.outputs.appinsightsLoggerName

@@ -1,9 +1,9 @@
-param prefix string
+param postfix string
 param region string
 param logAnalyticsName string
 
-var apimName = '${prefix}-apim'
-var appInsightsName = '${apimName}-ai'
+var apimName = 'apim-${postfix}'
+var appInsightsName = 'appi-${apimName}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsName
@@ -29,8 +29,8 @@ resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
     capacity: 1
   }
   properties: {
-    publisherName: prefix
-    publisherEmail: '${prefix}@${prefix}.sample.com'
+    publisherName: 'demo'
+    publisherEmail: 'demo@sample.com'
   }
 
   resource ailogger 'loggers' = {

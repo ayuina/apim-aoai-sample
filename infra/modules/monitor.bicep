@@ -1,7 +1,7 @@
-param prefix string
+param postfix string
 param region string
 
-var logAnalyticsName = '${prefix}-laws'
+var logAnalyticsName = 'laws-${postfix}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsName

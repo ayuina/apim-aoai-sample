@@ -1,8 +1,8 @@
-param prefix string
+param postfix string
 param aoaiRegion string
 param logAnalyticsName string
 
-var aoaiName = '${prefix}-${aoaiRegion}-aoai'
+var aoaiName = 'aoai-${aoaiRegion}-${postfix}'
 var aoaiModelName = 'gpt-35-turbo'
 var aoaiModelDeploy = 'g35t'
 var aoaiModelVersion = '0613'
