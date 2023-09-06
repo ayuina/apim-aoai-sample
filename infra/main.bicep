@@ -53,4 +53,4 @@ module aoai_api './modules/apim-openai-apidef.bicep' = {
 
 output API_MANAGEMENT_ENDPOINT string = 'https://${apim.outputs.apiManagementName}.azure-api.net'
 output AZURE_OPENAI_ENDPOINT string = 'https://${aoai.outputs.aoaiAccountName}.openai.azure.com'
-
+output AZURE_OPENAI_GPT_MODEL_DEPLOYMENT object = aoai.outputs.gptModelDeployment
