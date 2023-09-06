@@ -2,10 +2,22 @@ param postfix string
 param aoaiRegion string
 param logAnalyticsName string
 
-var aoaiName = 'aoai-${aoaiRegion}-${postfix}'
-var aoaiModelName = 'gpt-35-turbo'
-var aoaiModelDeploy = 'g35t'
-var aoaiModelVersion = '0613'
+var aoaiName = 'aoai-${postfix}'
+
+// https://learn.microsoft.com/ja-jp/azure/ai-services/openai/concepts/models#gpt-35-models
+var modelRegionMap = {
+  australiaeast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  canadaeast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  eastus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  eastus2: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  francecentral: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  japaneast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  northcentralus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  switzerlandnorth: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  uksouth: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
+  southcentralus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
+  westeurope: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
+}
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsName
@@ -26,7 +38,7 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 
 resource chatgpt 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: aoai
-  name: aoaiModelDeploy
+  name: modelRegionMap[aoaiRegion].deploy
   sku: {
     name: 'Standard'
     capacity: 10
@@ -34,8 +46,8 @@ resource chatgpt 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' =
   properties: {
     model: {
       format: 'OpenAI'
-      name: aoaiModelName
-      version: aoaiModelVersion
+      name: modelRegionMap[aoaiRegion].model
+      version: modelRegionMap[aoaiRegion].version
     }
   }
 }
@@ -69,4 +81,4 @@ resource aoaiDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
 }
 
 output aoaiAccountName string = aoai.name
-
+output aoaiModelDeployName string = chatgpt.name
