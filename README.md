@@ -25,6 +25,17 @@ Azure OpenAI を API Management で保護する構成を、IaC で一括デプ�
     - Azure OpenAI および API Management のリソースログ（診断ログ）の出力先
     - Application Insights のワークスペースとしても利用
 
+## サンプルコードの取得
+
+このリポジトリを [Fork](https://github.com/ayuina/apim-aoai-sample/fork) して、ローカルに Clone してください。
+
+```bash
+git clone https://github.com/${your-gitaccount-name}/apim-aoai-sample.git
+```
+
+Visual Studio Code ないしは PowerShell ターミナルでクローンしたディレクトリを開きます。
+
+
 ## Open AI の仕様書をダウンロードする
 
 API Management にインポートするための OpenAPI 仕様をダウンロードするスクリプトは以下のようになります。
