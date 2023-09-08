@@ -29,6 +29,12 @@ $targets | foreach {
     $tempAoaiUrl = "https://${defaultEndpoint}/openai"
     $temp.servers | Add-Member -NotePropertyName "url" -NotePropertyValue $tempAoaiUrl -Force
 
+    Write-Verbose "set api-version is not required, because importing multi-versioning api definition"
+    $temp.paths.psobject.Properties | foreach {
+        $queryParam = $_.Value.post.parameters | where {$_.name -eq 'api-version'}
+        $queryParam.required = $false
+    }
+
     Write-Verbose "saving to ${output}"
     $temp | ConvertTo-Json -Depth 100 | Out-File -FilePath $output -Force
 }

@@ -44,7 +44,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-06-01-preview",
@@ -359,7 +359,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-06-01-preview",
@@ -500,7 +500,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-06-01-preview",
@@ -806,7 +806,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-06-01-preview",

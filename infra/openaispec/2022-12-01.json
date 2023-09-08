@@ -44,7 +44,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2022-12-01",
@@ -360,7 +360,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2022-12-01",

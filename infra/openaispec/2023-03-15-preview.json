@@ -44,7 +44,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-03-15-preview",
@@ -360,7 +360,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-03-15-preview",
@@ -506,7 +506,7 @@
           {
             "in": "query",
             "name": "api-version",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "example": "2023-03-15-preview",
