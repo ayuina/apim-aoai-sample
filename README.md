@@ -11,12 +11,13 @@ Azure OpenAI を API Management で保護する構成を、IaC で一括デプ�
 - OpenAI サービス用の API キーをすべてのクライアントアプリケーションで共有する
 
 構成する方法は[こちら](https://learn.microsoft.com/en-us/semantic-kernel/deploy/use-ai-apis-with-api-management)に記載があるのですが、何度も手作業で構築するのが面倒なので自動化に挑戦してみました。
-ただそのままでは面白みがないので以下のカスタマイズをしています。
+ただこのままでは面白みがないので以下のカスタマイズをしています。
 
 - API Management も `api-key` HTTP ヘッダーで認証することで、各種 SDK と互換性を持つようにしています
 - 特定の api-version を API Management に登録するようにしています（複数指定可能）
 - API Magagement にインポートした OpenAI API のログを Application Insights で取得するように構成しています
 - Azure OpenAI Service のログを Log Analytics に収集するように構成しています
+- API Management の Managed ID を使用して Azure OpenAI Service にアクセスすることでキー登録を不要にしています
 
 ## 概要
 
@@ -69,6 +70,9 @@ az deployment group create -g $rgName -f ./infra/main.bicep
 
 # (Option) インポートする api-version を指定したい場合は以下のように実行します
 az deployment group create -g $rgName -f ./infra/main.bicep -p targetVersions="['2023-05-15', '2023-06-01-preview']"
+
+# (Option) 既定では API Management > OpenAI のアクセスは Managed ID で認可を行っていますが、API キー認証でデプロイすることも可能です。
+az deployment group create -g $rgName -f ./infra/main.bicep -p enableManagedIdAuth=false
 ```
 
 実行が完了したら Azure Portal で API Management を開くと OpenAI の複数の api-version が登録されています。

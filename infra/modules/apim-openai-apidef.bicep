@@ -2,9 +2,11 @@ param apimName string
 param targetVersionSpecs array
 param aiLoggerName string
 param aoaiName string
+param enableManagedIdAuth bool
 
-var policySpec = loadTextContent('./apim-openai-policy.xml')
 var aoaikeyNamedValueRef = 'AzureOpenAIKey'
+var overwriteApikeyPolicy = loadTextContent('./apim-openai-policy.xml')
+var managedidAuthPolicy = loadTextContent('./apim-openai-policy-midauth.xml')
 
 resource apim 'Microsoft.ApiManagement/service@2023-03-01-preview' existing = {
   name: apimName
@@ -18,13 +20,28 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
   name: aoaiName
 }
 
-resource nv 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = {
+resource openaiContributor 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  scope: subscription()
+  name: 'a001fd3d-188f-4b5d-821b-7da978bf7442'
+}
+
+
+resource nv 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = if(!enableManagedIdAuth) {
   parent: apim
   name: 'NV-AzureOpenAIKey'
   properties: {
     displayName: aoaikeyNamedValueRef
     value: aoai.listKeys().key1
     secret: true
+  }
+}
+
+resource openaiContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if(enableManagedIdAuth) {
+  scope: aoai
+  name: guid(subscription().subscriptionId, resourceGroup().name, apim.id, openaiContributor.id)
+  properties: {
+    roleDefinitionId: openaiContributor.id
+    principalId: apim.identity.principalId
   }
 }
 
@@ -64,7 +81,7 @@ resource allOperationPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-
   name: 'policy'
   properties: {
     format: 'rawxml'
-    value: policySpec
+    value: enableManagedIdAuth ? managedidAuthPolicy : overwriteApikeyPolicy
   }
 }]
 

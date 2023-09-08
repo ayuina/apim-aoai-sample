@@ -1,12 +1,14 @@
 param postfix string
 param region string
 param logAnalyticsName string
+param enableManagedIdAuth bool
 
 var apimName = 'apim-${postfix}'
 var apimSku = {
-  name: 'Developer'
-  capacity: 1
+  name: 'Consumption'
+  capacity: 0
 }
+var apimid = enableManagedIdAuth ? { type: 'SystemAssigned' } : null
 var appInsightsName = 'appi-${apimName}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -33,6 +35,7 @@ resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
     publisherName: 'demo'
     publisherEmail: 'demo@sample.com'
   }
+  identity: apimid
 
   resource ailogger 'loggers' = {
     name: '${appInsightsName}-logger'
