@@ -1,20 +1,23 @@
-targetScope='subscription'
 
-param environmentName string
-param region string
-param aoaiRegion string = ''
+param region string = resourceGroup().location
+param aoaiRegion string = resourceGroup().location
+param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
 
-var postfix = toLower(uniqueString(subscription().id, region, environmentName))
-var rgName = 'rg-${environmentName}'
-
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: rgName
-  location: region
-}
+var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
+var aoaiSpecDocs = [
+  loadTextContent('./openaispec/2022-03-01-preview.json')
+  loadTextContent('./openaispec/2022-06-01-preview.json')
+  loadTextContent('./openaispec/2022-12-01.json')
+  loadTextContent('./openaispec/2023-03-15-preview.json')
+  loadTextContent('./openaispec/2023-05-15.json')
+  loadTextContent('./openaispec/2023-06-01-preview.json')
+  loadTextContent('./openaispec/2023-07-01-preview.json')
+  loadTextContent('./openaispec/2023-08-01-preview.json')
+]
+var targetSpecs = filter(aoaiSpecDocs, spec => contains(targetVersions, json(spec).info.version))
 
 module monitor './modules/monitor.bicep' = {
   name: 'monitor'
-  scope: rg
   params:{
     postfix: postfix
     region: region
@@ -23,17 +26,15 @@ module monitor './modules/monitor.bicep' = {
 
 module aoai './modules/openai.bicep' = {
   name: 'aoai'
-  scope: rg
   params:{
     postfix: postfix
-    aoaiRegion: !empty(aoaiRegion) ? aoaiRegion : region
+    aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
   }
 }
 
 module apim './modules/apim-svc.bicep' = {
   name: 'apim'
-  scope: rg
   params:{
     postfix: postfix
     region: region
@@ -43,9 +44,9 @@ module apim './modules/apim-svc.bicep' = {
 
 module aoai_api './modules/apim-openai-apidef.bicep' = {
   name: 'aoai_api'
-  scope: rg
   params:{
     apimName: apim.outputs.apiManagementName
+    targetVersionSpecs: targetSpecs
     aiLoggerName: apim.outputs.appinsightsLoggerName
     aoaiName: aoai.outputs.aoaiAccountName
   }
