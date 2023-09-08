@@ -3,6 +3,10 @@ param region string
 param logAnalyticsName string
 
 var apimName = 'apim-${postfix}'
+var apimSku = {
+  name: 'Consumption'
+  capacity: 0
+}
 var appInsightsName = 'appi-${apimName}'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -24,10 +28,7 @@ resource appinsights 'Microsoft.Insights/components@2020-02-02' = {
 resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
   name: apimName
   location: region
-  sku: {
-    name: 'Developer'
-    capacity: 1
-  }
+  sku: apimSku
   properties: {
     publisherName: 'demo'
     publisherEmail: 'demo@sample.com'
