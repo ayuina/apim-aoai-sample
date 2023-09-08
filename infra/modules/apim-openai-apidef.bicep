@@ -1,14 +1,7 @@
 param apimName string
+param targetVersionSpecs array
 param aiLoggerName string
 param aoaiName string
-
-var aoaiSpecDocs = [
-  loadTextContent('../openaispec/2023-05-15.json')
-  loadTextContent('../openaispec/2023-06-01-preview.json')
-  loadTextContent('../openaispec/2023-07-01-preview.json')
-  loadTextContent('../openaispec/2023-08-01-preview.json')
-]
-
 
 var policySpec = loadTextContent('./apim-openai-policy.xml')
 var aoaikeyNamedValueRef = 'AzureOpenAIKey'
@@ -45,7 +38,7 @@ resource aoaiVS 'Microsoft.ApiManagement/service/apiVersionSets@2023-03-01-previ
   }
 }
 
-resource aoaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+resource aoaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = [for (spec, idx) in targetVersionSpecs: {
   parent: apim
   name: 'OpenAI-${json(spec).info.version}'
   properties: {
@@ -66,7 +59,7 @@ resource aoaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = [f
   }
 }]
 
-resource allOperationPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+resource allOperationPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-03-01-preview' = [for (spec, idx) in targetVersionSpecs: {
   parent: aoaiApis[idx]
   name: 'policy'
   properties: {
@@ -75,7 +68,7 @@ resource allOperationPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-
   }
 }]
 
-resource appinsDiag 'Microsoft.ApiManagement/service/apis/diagnostics@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+resource appinsDiag 'Microsoft.ApiManagement/service/apis/diagnostics@2023-03-01-preview' = [for (spec, idx) in targetVersionSpecs: {
   parent: aoaiApis[idx]
   name: 'applicationinsights'
   properties: {
