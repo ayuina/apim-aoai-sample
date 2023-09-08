@@ -4,8 +4,8 @@ param logAnalyticsName string
 
 var apimName = 'apim-${postfix}'
 var apimSku = {
-  name: 'Consumption'
-  capacity: 0
+  name: 'Developer'
+  capacity: 1
 }
 var appInsightsName = 'appi-${apimName}'
 

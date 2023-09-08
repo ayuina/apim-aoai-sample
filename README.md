@@ -11,6 +11,7 @@ Azure OpenAI を API Management で保護する構成を、IaC で一括デプ�
 - OpenAI サービス用の API キーをすべてのクライアントアプリケーションで共有する
 
 構成する方法は[こちら](https://learn.microsoft.com/en-us/semantic-kernel/deploy/use-ai-apis-with-api-management)に記載があるのですが、何度も手作業で構築するのが面倒なので自動化に挑戦してみました。
+ただそのままでは面白みがないので、指定の api-version のみを API Management に登録するようにしています。
 
 ## 概要
 
@@ -36,28 +37,13 @@ git clone https://github.com/${your-gitaccount-name}/apim-aoai-sample.git
 Visual Studio Code ないしは PowerShell ターミナルでクローンしたディレクトリを開きます。
 
 
-## Open AI の仕様書をダウンロードする
+## 最新の Open AI の仕様書をダウンロードする
 
 API Management にインポートするための OpenAPI 仕様をダウンロードするスクリプトは以下のようになります。
-本リポジトリにも[ダウンロード済みのもの](./infra/modules/apim-openai-interface.json)が含めてありますので、API 仕様のバージョンを確認して変更不要であればこの手順は飛ばしても構いません。
-
-バージョンを変更したい場合は下記のスクリプトを適宜修正して実行してください。
-利用可能な API のバージョンについては [リファレンス](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/reference)を参照してください。
+本リポジトリにも[ダウンロード済みのもの](./infra/oepnaispec)が含めてありますので、API 仕様のバージョンを確認して変更不要であればこの手順は飛ばしても構いません。
 
 ```powershell
-$version = '2023-07-01-preview'
-$status = $version.EndsWith('-preview') ? 'preview' : 'stable'
-$output = './infra/modules/apim-openai-interface.json'
-
-Write-Host "Download OpenAI specification version: $version"
-$specUrl = "https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/cognitiveservices/data-plane/AzureOpenAI/inference/${status}/${version}/inference.json"
-$temp = (Invoke-WebRequest -Uri $specUrl).Content | ConvertFrom-Json
-
-Write-Verbose "overwrite endpoint to import api management. this value doesn't exists, but will be overwritten when bicep deployment"
-$defaultEndpoint = $temp.servers.variables.endpoint.default
-$tempAoaiUrl = "https://${defaultEndpoint}/openai"
-$temp.servers | Add-Member -NotePropertyName "url" -NotePropertyValue $tempAoaiUrl -Force
-$temp | ConvertTo-Json -Depth 100 | Out-File -FilePath $output -Force
+./scripts/download-openaispec.ps1
 ```
 
 ## テンプレートのデプロイ
@@ -70,11 +56,19 @@ az login
 $subscription = '<your subscription id>'
 az account set -s $subscription
 
-$envName = 'demo0906a'
 $region = 'japaneast'
+$rgName = 'demo0908-rg'
 
-az deployment sub create -l $japaneast -f ./infra/main.bicep -p environmentName=$envName region=$region
+az group create -l $region -n $rgName
+az deployment group create -g $rgName -f ./infra/main.bicep 
+
+# (Option) インポートする api-version を指定したい場合は以下のように実行します
+az deployment group create -g $rgName -f ./infra/main.bicep -p targetVersions="['2023-05-15', '2023-06-01-preview']"
 ```
+
+実行が完了したら Azure Portal で API Management を開くと OpenAI の複数の api-version が登録されています。
+
+![API Definitions imported in API Management](./images/imported-aoai.png)
 
 ## テスト実行
 
@@ -84,7 +78,7 @@ API Management にデプロイされた OpenAI 互換の API を呼び出して�
 
 ```rest
 @model=g35t
-@version=2023-07-01-preview
+@version=2023-06-01-preview
 
 POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
 api-key: {{$dotenv APIM_KEY}}

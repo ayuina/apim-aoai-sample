@@ -1,7 +1,7 @@
 
 param region string = resourceGroup().location
 param aoaiRegion string = resourceGroup().location
-param targetVersions array = ['2023-07-01-preview']
+param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
