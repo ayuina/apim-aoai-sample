@@ -2,6 +2,7 @@
 param region string = resourceGroup().location
 param aoaiRegion string = resourceGroup().location
 param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
+param enableManagedIdAuth bool = true
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
@@ -30,6 +31,7 @@ module aoai './modules/openai.bicep' = {
     postfix: postfix
     aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
+    enableManagedIdAuth: enableManagedIdAuth
   }
 }
 
@@ -38,6 +40,7 @@ module apim './modules/apim-svc.bicep' = {
   params:{
     postfix: postfix
     region: region
+    enableManagedIdAuth: enableManagedIdAuth
     logAnalyticsName: monitor.outputs.LogAnalyticsName
   }
 }
@@ -46,6 +49,7 @@ module aoai_api './modules/apim-openai-apidef.bicep' = {
   name: 'aoai_api'
   params:{
     apimName: apim.outputs.apiManagementName
+    enableManagedIdAuth: enableManagedIdAuth
     targetVersionSpecs: targetSpecs
     aiLoggerName: apim.outputs.appinsightsLoggerName
     aoaiName: aoai.outputs.aoaiAccountName
