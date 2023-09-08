@@ -2,7 +2,14 @@ param apimName string
 param aiLoggerName string
 param aoaiName string
 
-var aoaiSpec = loadTextContent('./apim-openai-interface.json')
+var aoaiSpecDocs = [
+  loadTextContent('../openaispec/2023-05-15.json')
+  loadTextContent('../openaispec/2023-06-01-preview.json')
+  loadTextContent('../openaispec/2023-07-01-preview.json')
+  loadTextContent('../openaispec/2023-08-01-preview.json')
+]
+
+
 var policySpec = loadTextContent('./apim-openai-policy.xml')
 var aoaikeyNamedValueRef = 'AzureOpenAIKey'
 
@@ -28,9 +35,19 @@ resource nv 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = {
   }
 }
 
-resource openaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = {
+resource aoaiVS 'Microsoft.ApiManagement/service/apiVersionSets@2023-03-01-preview' = {
   parent: apim
-  name: 'OpenAI-${json(aoaiSpec).info.version}'
+  name: 'OpenAI'
+  properties: {
+    displayName: 'Azure OpenAI'
+    versioningScheme: 'Query'
+    versionQueryName: 'api-version'
+  }
+}
+
+resource aoaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+  parent: apim
+  name: 'OpenAI-${json(spec).info.version}'
   properties: {
     path: 'openai'
     subscriptionRequired: true
@@ -43,47 +60,52 @@ resource openaiApis 'Microsoft.ApiManagement/service/apis@2023-03-01-preview' = 
     subscriptionKeyParameterNames: {
       header: 'api-key'
     }
-    value: aoaiSpec
+    value: spec
+    apiVersionSetId: aoaiVS.id
+    apiVersion: json(spec).info.version
   }
+}]
 
-  resource policy 'policies' = {
-    name: 'policy'
-    properties: {
-      format: 'rawxml'
-      value: policySpec
+resource allOperationPolicy 'Microsoft.ApiManagement/service/apis/policies@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+  parent: aoaiApis[idx]
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: policySpec
+  }
+}]
+
+resource appinsDiag 'Microsoft.ApiManagement/service/apis/diagnostics@2023-03-01-preview' = [for (spec, idx) in aoaiSpecDocs: {
+  parent: aoaiApis[idx]
+  name: 'applicationinsights'
+  properties: {
+    loggerId: apim::aiLogger.id
+    alwaysLog: 'allErrors'
+    logClientIp: true
+    verbosity: 'verbose'
+    sampling: {
+      percentage: 100
+      samplingType: 'fixed'
     }
-  }
-
-  resource diag 'diagnostics' = {
-    name: 'applicationinsights'
-    properties: {
-      loggerId: apim::aiLogger.id
-      alwaysLog: 'allErrors'
-      logClientIp: true
-      verbosity: 'verbose'
-      sampling: {
-        percentage: 100
-        samplingType: 'fixed'
+    frontend: {
+      request: {
+        body: { bytes: 8192 }
+        headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
       }
-      frontend: {
-        request: {
-          body: { bytes: 8192 }
-          headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
-        }
-        response: {
-          body: { bytes: 8192 }
-          headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
-        }
-      }
-      backend: {
-        request: {
-          body: { bytes: 8192 }
-          headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
-        }
-        response: {
-          body: { bytes: 8192 }
-          headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
-        }
+      response: {
+        body: { bytes: 8192 }
+        headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
       }
     }
-  }}
+    backend: {
+      request: {
+        body: { bytes: 8192 }
+        headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
+      }
+      response: {
+        body: { bytes: 8192 }
+        headers:['x-ms-region', 'openai-model', 'openai-processing-ms']
+      }
+    }
+  }
+}]
