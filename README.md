@@ -11,7 +11,12 @@ Azure OpenAI を API Management で保護する構成を、IaC で一括デプ�
 - OpenAI サービス用の API キーをすべてのクライアントアプリケーションで共有する
 
 構成する方法は[こちら](https://learn.microsoft.com/en-us/semantic-kernel/deploy/use-ai-apis-with-api-management)に記載があるのですが、何度も手作業で構築するのが面倒なので自動化に挑戦してみました。
-ただそのままでは面白みがないので、指定の api-version のみを API Management に登録するようにしています。
+ただそのままでは面白みがないので以下のカスタマイズをしています。
+
+- API Management も `api-key` HTTP ヘッダーで認証することで、各種 SDK と互換性を持つようにしています
+- 特定の api-version を API Management に登録するようにしています（複数指定可能）
+- API Magagement にインポートした OpenAI API のログを Application Insights で取得するように構成しています
+- Azure OpenAI Service のログを Log Analytics に収集するように構成しています
 
 ## 概要
 
