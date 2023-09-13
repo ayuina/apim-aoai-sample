@@ -18,14 +18,6 @@ api-key: {{$dotenv APIM_KEY}}
   "stop": null
 }
 
-### CALL via APIM
-POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
-api-key: {{$dotenv APIM_KEY}}
-
-{
-  "messages": [{"role":"system","content":"You are an AI assistant that helps people find information."}, {"role":"user","content":"Who are you ?"}   ]
-}
-
 ### CALL OpenAI Direct
 POST https://{{$dotenv AOAI_NAME}}.openai.azure.com/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
 api-key: {{$dotenv AOAI_KEY}}
