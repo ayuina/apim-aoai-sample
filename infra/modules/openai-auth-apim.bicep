@@ -16,7 +16,7 @@ resource openaiContributor 'Microsoft.Authorization/roleDefinitions@2022-05-01-p
 
 resource openaiContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' =  {
   scope: aoai
-  name: guid(subscription().subscriptionId, resourceGroup().name, apim.id, openaiContributor.id)
+  name: guid(subscription().subscriptionId, resourceGroup().name, apim.id, aoai.id, openaiContributor.id)
   properties: {
     roleDefinitionId: openaiContributor.id
     principalId: apim.identity.principalId

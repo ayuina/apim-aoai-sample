@@ -1,6 +1,7 @@
 
 param region string = resourceGroup().location
-param aoaiRegion string = resourceGroup().location
+param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
+//param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
 param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
 param enableManagedIdAuth bool = true
 
@@ -25,15 +26,15 @@ module monitor './modules/monitor.bicep' = {
   }
 }
 
-module aoai './modules/openai.bicep' = {
-  name: 'aoai'
+module aoais './modules/openai.bicep' = [for aoaiRegion in aoaiRegions: {
+  name: 'aoai-${aoaiRegion}'
   params:{
-    postfix: postfix
+    postfix: '${aoaiRegion}-${postfix}'
     aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
     enableManagedIdAuth: enableManagedIdAuth
   }
-}
+}]
 
 module apim './modules/apim-svc.bicep' = {
   name: 'apim'
@@ -45,13 +46,13 @@ module apim './modules/apim-svc.bicep' = {
   }
 }
 
-module auth './modules/openai-auth-apim.bicep' = if(enableManagedIdAuth) {
-  name: 'auth'
+module auth './modules/openai-auth-apim.bicep' = [for (aoaiRegion, idx) in aoaiRegions: if(enableManagedIdAuth) {
+  name: 'auth-${aoaiRegion}'
   params:{
     apimName: apim.outputs.apiManagementName
-    aoaiName: aoai.outputs.aoaiAccountName
+    aoaiName: aoais[idx].outputs.aoaiAccountName
   }
-}
+}]
 
 module aoai_api './modules/apim-openai-apidef.bicep' = {
   name: 'aoai_api'
@@ -60,10 +61,7 @@ module aoai_api './modules/apim-openai-apidef.bicep' = {
     enableManagedIdAuth: enableManagedIdAuth
     targetVersionSpecs: targetSpecs
     aiLoggerName: apim.outputs.appinsightsLoggerName
-    aoaiName: aoai.outputs.aoaiAccountName
+    aoaiNames: [for (aoaiRegion, idx) in aoaiRegions: aoais[idx].outputs.aoaiAccountName]
   }
 }
 
-output API_MANAGEMENT_ENDPOINT string = 'https://${apim.outputs.apiManagementName}.azure-api.net'
-output AZURE_OPENAI_ENDPOINT string = 'https://${aoai.outputs.aoaiAccountName}.openai.azure.com'
-output AZURE_OPENAI_GPT_MODEL_DEPLOYMENT object = aoai.outputs.gptModelDeployment

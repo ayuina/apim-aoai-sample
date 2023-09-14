@@ -1,15 +1,11 @@
 <policies>
     <inbound>
         <base />
+        <set-backend-service backend-id="@( string.Format( "AOAI-{0}", DateTime.Now.Ticks % int.Parse("{{AOAICount}}") ) )" />
         <choose>
-            <when condition="@(string.IsNullOrWhiteSpace("{{AzureOpenAIKey}}"))">
+            <when condition="@("{{AOAIAuthMode}}" == "ManagedIdentity")">
                 <authentication-managed-identity resource="https://cognitiveservices.azure.com/" />
             </when>
-            <otherwise>
-                <set-header name="api-key" exists-action="override">
-                    <value>{{AzureOpenAIKey}}</value>
-                </set-header>
-            </otherwise>
         </choose>
     </inbound>
     <backend>
