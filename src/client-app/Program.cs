@@ -5,6 +5,9 @@ using Azure;
 using Azure.AI.OpenAI;
 using dotenv.net;
 using dotenv.net.Utilities;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DependencyCollector;
+using Microsoft.ApplicationInsights.Extensibility;
 
 namespace client_app // Note: actual namespace depends on the project name.
 {
@@ -26,13 +29,20 @@ namespace client_app // Note: actual namespace depends on the project name.
         {
             DotEnv.Load(new DotEnvOptions(probeForEnv: true));
 
-            // var aoaiurl = string.Format("https://{0}.openai.azure.com/", EnvReader.GetStringValue("AOAI_NAME"));
-            // var aoaikey = EnvReader.GetStringValue("AOAI_KEY");
-            // await CallOpenAI(aoaiurl, aoaikey);
+            var appiConfig = new TelemetryConfiguration(){
+                ConnectionString = EnvReader.GetStringValue("APPI_CONSTR"),
+                TelemetryInitializers = { new MyTelemetryInitializer() }
+            };
+            DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
+            depModule.Initialize(appiConfig);
 
             var apimurl = string.Format("https://{0}.azure-api.net/", EnvReader.GetStringValue("APIM_NAME"));
             var apimkey = EnvReader.GetStringValue("APIM_KEY");
             await CallOpenAI(apimurl, apimkey);
+
+            // var aoaiurl = string.Format("https://{0}.openai.azure.com/", EnvReader.GetStringValue("AOAI_NAME"));
+            // var aoaikey = EnvReader.GetStringValue("AOAI_KEY");
+            // await CallOpenAI(aoaiurl, aoaikey);
 
         }
 
@@ -54,25 +64,42 @@ namespace client_app // Note: actual namespace depends on the project name.
                 }
             };
 
-            var response = await client.GetChatCompletionsAsync("g35t", prompt);
-
-            Console.WriteLine("{0} {1}", response.GetRawResponse().Status, response.GetRawResponse().ReasonPhrase);
-            response.GetRawResponse().Headers.OrderBy(h => h.Name).ToList().ForEach(h =>
+            for(int i = 0; i < 1000; i++)
             {
-                Console.WriteLine($"{h.Name}: {h.Value}");
-            });
+                var response = await client.GetChatCompletionsAsync("g35t", prompt);
+                var raw = response.GetRawResponse();
 
-            Console.WriteLine();
+                Console.WriteLine("{0} {1} from {2} region", 
+                    raw.Status, 
+                    raw.ReasonPhrase, 
+                    raw.Headers.Where(h => h.Name == "x-ms-region" ).First().Value);
+           }
 
-            using (var writer = new Utf8JsonWriter(Console.OpenStandardOutput(), new JsonWriterOptions() { Indented = true }))
-            {
-                JsonSerializer.Serialize(writer, response.Value);
-            }
+            // Console.WriteLine("{0} {1}", response.GetRawResponse().Status, response.GetRawResponse().ReasonPhrase);
+            // response.GetRawResponse().Headers.OrderBy(h => h.Name).ToList().ForEach(h =>
+            // {
+            //     Console.WriteLine($"{h.Name}: {h.Value}");
+            // });
 
-            Console.WriteLine();
-            Console.WriteLine();
+            // Console.WriteLine();
+
+            // using (var writer = new Utf8JsonWriter(Console.OpenStandardOutput(), new JsonWriterOptions() { Indented = true }))
+            // {
+            //     JsonSerializer.Serialize(writer, response.Value);
+            // }
+
+            // Console.WriteLine();
+            // Console.WriteLine();
 
         }
 
+    }
+
+    public class MyTelemetryInitializer : ITelemetryInitializer
+    {
+        public void Initialize(ITelemetry telemetry)
+        {
+            telemetry.Context.Cloud.RoleName = "client_app";
+        }
     }
 }

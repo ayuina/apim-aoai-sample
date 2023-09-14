@@ -5,8 +5,8 @@ param aoaiNames array
 param enableManagedIdAuth bool
 
 var authModeNVRef = 'AOAIAuthMode'
-// var aoaikeyNamedValueRef = 'AzureOpenAIKey'
-// var aoaiEndpointNamedValueRef = 'AzureOpenAIEndpoint'
+var aoaiCountNVRef = 'AOAICount'
+var aoaikeyNVRef = 'AOAIKey'
 var allapipolicy = loadTextContent('./apim-openai-policy.xml')
 
 resource apim 'Microsoft.ApiManagement/service@2023-03-01-preview' existing = {
@@ -21,29 +21,7 @@ resource aoaiCluster 'Microsoft.CognitiveServices/accounts@2023-05-01' existing 
   name: aoaiName
 }]
 
-// for each openai service
-
-// resource nvApikeys 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: {
-//   parent: apim
-//   name: 'NV-${aoaiName}-Key'
-//   properties: {
-//     displayName: '${aoaikeyNamedValueRef}-${idx}'
-//     value: enableManagedIdAuth ? '    ' :  aoaiCluster[idx].listKeys().key1
-//     secret: true
-//   }
-// }]
-
-// resource nvBackends 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: {
-//   parent: apim
-//   name: 'NV-${aoaiName}-Endpoint'
-//   properties: {
-//     displayName: '${aoaiEndpointNamedValueRef}-${idx}'
-//     value: '${aoaiCluster[idx].properties.endpoint}openai' 
-//     secret: false
-//   }
-// }]
-
-resource authModeNV 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = {
+resource nvAuthMode 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = {
   parent: apim
   name: authModeNVRef
   properties: {
@@ -52,27 +30,50 @@ resource authModeNV 'Microsoft.ApiManagement/service/namedValues@2023-03-01-prev
   }
 }
 
+resource nvAoaiCount 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = {
+  parent: apim
+  name: aoaiCountNVRef
+  properties: {
+    displayName: aoaiCountNVRef
+    value: string(length(aoaiNames))
+  }
+}
+
+resource nvApikeys 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: {
+  parent: apim
+  name: '${aoaikeyNVRef}-${idx}'
+  properties: {
+    displayName: '${aoaikeyNVRef}-${idx}'
+    value: enableManagedIdAuth ? '    ' :  aoaiCluster[idx].listKeys().key1
+    secret: true
+  }
+}]
+
 resource backendOpenAIs 'Microsoft.ApiManagement/service/backends@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: {
   parent: apim
-  name: 'OpenAI-${idx}'
+  name: 'AOAI-${idx}'
+  dependsOn:[
+    nvApikeys[idx]
+  ]
   properties: {
-    title: 'OpenAI-${idx}'
-    description: 'OpenAI-${idx}'
+    title: 'AOAI-${idx}'
+    description: 'AOAI-${idx}'
     protocol: 'http'
     url: '${aoaiCluster[idx].properties.endpoint}openai'
     credentials: {
       header: enableManagedIdAuth ? null : {
-        'api-key': aoaiCluster[idx].listKeys().key1
+        'api-key': ['{{${aoaikeyNVRef}-${idx}}}']
       }
     }
   }
 }]
 
-// for single api definition 
-
 resource aoaiVS 'Microsoft.ApiManagement/service/apiVersionSets@2023-03-01-preview' = {
   parent: apim
   name: 'OpenAI'
+  dependsOn:[
+    nvAoaiCount, nvApikeys, nvAuthMode, backendOpenAIs
+  ]
   properties: {
     displayName: 'Azure OpenAI'
     versioningScheme: 'Query'

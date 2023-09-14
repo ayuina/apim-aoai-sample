@@ -1,8 +1,7 @@
 <policies>
     <inbound>
         <base />
-        <set-variable name="Selected" value="@(DateTime.Now.Ticks % 3)" />
-        <set-backend-service backend-id="@( $"OpenAI-{context.Variables["Selected"]}" )" />
+        <set-backend-service backend-id="@( string.Format( "AOAI-{0}", DateTime.Now.Ticks % int.Parse("{{AOAICount}}") ) )" />
         <choose>
             <when condition="@("{{AOAIAuthMode}}" == "ManagedIdentity")">
                 <authentication-managed-identity resource="https://cognitiveservices.azure.com/" />
