@@ -45,6 +45,14 @@ module apim './modules/apim-svc.bicep' = {
   }
 }
 
+module auth './modules/openai-auth-apim.bicep' = if(enableManagedIdAuth) {
+  name: 'auth'
+  params:{
+    apimName: apim.outputs.apiManagementName
+    aoaiName: aoai.outputs.aoaiAccountName
+  }
+}
+
 module aoai_api './modules/apim-openai-apidef.bicep' = {
   name: 'aoai_api'
   params:{
