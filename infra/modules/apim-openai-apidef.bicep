@@ -39,7 +39,7 @@ resource nvAoaiCount 'Microsoft.ApiManagement/service/namedValues@2023-03-01-pre
   }
 }
 
-resource nvApikeys 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: {
+resource nvApikeys 'Microsoft.ApiManagement/service/namedValues@2023-03-01-preview' = [for (aoaiName, idx) in aoaiNames: if(!enableManagedIdAuth){
   parent: apim
   name: '${aoaikeyNVRef}-${idx}'
   properties: {
