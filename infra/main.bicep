@@ -1,10 +1,12 @@
 
 param region string = resourceGroup().location
-param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
-//param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
+//param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
+param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
 param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview', '2023-09-01-preview']
 param enableManagedIdAuth bool = true
+param enableAoaiApikeyAuth bool = true
 param aoaiModelCapacity int = 40
+
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
@@ -34,7 +36,7 @@ module aoais './modules/openai.bicep' = [for aoaiRegion in aoaiRegions: {
     postfix: '${aoaiRegion}-${postfix}'
     aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
-    enableManagedIdAuth: enableManagedIdAuth
+    enableApikeyAuth: enableAoaiApikeyAuth
     aoaiModelCapacity: aoaiModelCapacity
   }
 }]
@@ -46,6 +48,7 @@ module apim './modules/apim-svc.bicep' = {
     region: region
     enableManagedIdAuth: enableManagedIdAuth
     logAnalyticsName: monitor.outputs.LogAnalyticsName
+    apimSku: 'StandardV2'
   }
 }
 
@@ -68,3 +71,5 @@ module aoai_api './modules/apim-openai-apidef.bicep' = {
   }
 }
 
+output APIM_NAME string = apim.outputs.apiManagementName
+output APIM_KEY string = apim.outputs.apiManagementKey

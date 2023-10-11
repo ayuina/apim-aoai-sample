@@ -2,12 +2,9 @@ param postfix string
 param region string
 param logAnalyticsName string
 param enableManagedIdAuth bool
+param apimSku string
 
 var apimName = 'apim-${postfix}'
-var apimSku = {
-  name: 'Consumption'
-  capacity: 0
-}
 var apimid = enableManagedIdAuth ? { type: 'SystemAssigned' } : null
 var appInsightsName = 'appi-${apimName}'
 
@@ -30,7 +27,10 @@ resource appinsights 'Microsoft.Insights/components@2020-02-02' = {
 resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
   name: apimName
   location: region
-  sku: apimSku
+  sku: {
+    name: apimSku
+    capacity: apimSku == 'Consumption' ? 0 : 1
+  }
   properties: {
     publisherName: 'demo'
     publisherEmail: 'demo@sample.com'

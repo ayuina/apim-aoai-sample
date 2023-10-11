@@ -1,7 +1,7 @@
 param postfix string
 param aoaiRegion string
 param logAnalyticsName string
-param enableManagedIdAuth bool
+param enableApikeyAuth bool
 param aoaiModelCapacity int
 
 var aoaiName = 'aoai-${postfix}'
@@ -35,7 +35,7 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   properties: {
     customSubDomainName: aoaiName
     publicNetworkAccess: 'Enabled'
-    disableLocalAuth: enableManagedIdAuth
+    disableLocalAuth: !enableApikeyAuth
   }
 }
 
