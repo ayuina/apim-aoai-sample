@@ -1,16 +1,9 @@
 
 param region string = resourceGroup().location
-param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview', '2023-09-01-preview']
-param enableManagedIdAuth bool = true
-param apimSku string = 'StandardV2'
-param aoaiCluster object = {
-  modelName: 'gpt-35-turbo'
-  modelVersion: '0301'
-  modelCapacity: 40
-  modelDeploymentName: 'g35t'
-  regions: ['eastus', 'westeurope', 'uksouth']
-  enableApikeyAuth: true
-}
+param targetVersions array
+param enableManagedIdAuth bool
+param apimSku string
+param aoaiCluster object
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
