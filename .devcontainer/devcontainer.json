@@ -3,7 +3,7 @@
 {
 	"name": "apim-aoai-sample",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/dotnet:7.0-bullseye",
+	"image": "mcr.microsoft.com/devcontainers/dotnet:7.0-jammy",
 
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {

@@ -1,0 +1,77 @@
+@model=g35t
+@version=2023-08-01-preview
+@fqdn={{$dotenv APIM_NAME}}.azure-api.net
+@key={{$dotenv APIM_KEY}}
+
+###
+POST https://{{fqdn}}/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{key}}
+Content-Type: application/json
+
+{
+    "messages": [
+        {"role":"system", "content":"天気予報ボットです。ユーザーの問い合わせに含まれる場所と日付に応じた天気を取得して回答してください。ユーザーメッセージに明確な日付が含まれない場合はユーザーに質問してください。"},
+        {"role":"user","content":"明日の東京の天気は？"}
+    ],
+    "temperature": 0,
+    "top_p": 1.0,
+    "n": 1,
+    "function_call": "auto",
+    "functions": [
+        {
+            "name":"get_weather",
+            "description": "指定した地名と日付に応じた天気予報を取得します",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "天気予報を取得する場所の地名"
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "天気予報を取得する日時"
+                    }
+                },
+                "required": ["location", "datetime"]
+            }
+        }
+    ]
+}
+
+###
+POST https://{{fqdn}}/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{key}}
+Content-Type: application/json
+
+{
+    "messages": [
+        {"role":"system", "content":"天気予報ボットです。ユーザーの問い合わせに含まれる場所と日付に応じた天気を取得して回答してください。"},
+        {"role":"user", "content":"明日の東京の天気は？"},
+        {"role": "function", "name":"get_weather", "content": "{ \"location\": \"東京\",  \"date\": \"2023-10-12\", \"weather\":\"晴れ\" }"}
+    ],
+    "temperature": 0.9,
+    "top_p": 1.0,
+    "n": 1,
+    "function_call": "auto",
+    "functions": [
+        {
+            "name":"get_weather",
+            "description": "指定した地名と日付に応じた天気予報を取得します",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "天気予報を取得する場所の地名"
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "天気予報を取得する日時"
+                    }
+                },
+                "required": ["location", "datetime"]
+            }
+        }
+    ]
+}

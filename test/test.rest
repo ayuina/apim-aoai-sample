@@ -1,5 +1,5 @@
 @model=g35t
-@version=2023-07-01-preview
+@version=2023-08-01-preview
 
 ### CALL via APIM
 POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
