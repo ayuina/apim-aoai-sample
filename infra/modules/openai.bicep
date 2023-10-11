@@ -2,24 +2,13 @@ param postfix string
 param aoaiRegion string
 param logAnalyticsName string
 param enableApikeyAuth bool
-param aoaiModelCapacity int
+param modelCapacity int
+param modelName string
+param modelVersion string
+param modelDeploymentName string
 
 var aoaiName = 'aoai-${postfix}'
 
-// https://learn.microsoft.com/ja-jp/azure/ai-services/openai/concepts/models#gpt-35-models
-var modelRegionMap = {
-  eastus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
-  uksouth: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
-  westeurope: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
-  australiaeast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  canadaeast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  eastus2: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  francecentral: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  japaneast: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  northcentralus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  switzerlandnorth: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0613' }
-  southcentralus: { model: 'gpt-35-turbo', deploy: 'g35t', version: '0301' }
-}
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsName
@@ -39,18 +28,18 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
 }
 
-resource chatgpt 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource model 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: aoai
-  name: modelRegionMap[aoaiRegion].deploy
+  name: modelDeploymentName
   sku: {
     name: 'Standard'
-    capacity: aoaiModelCapacity
+    capacity: modelCapacity
   }
   properties: {
     model: {
       format: 'OpenAI'
-      name: modelRegionMap[aoaiRegion].model
-      version: modelRegionMap[aoaiRegion].version
+      name: modelName
+      version: modelVersion
     }
   }
 }
@@ -85,5 +74,5 @@ resource aoaiDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
 
 output aoaiAccountName string = aoai.name
 output aoaiEndpoint string = aoai.properties.endpoint
-output gptModelDeployment object = modelRegionMap[aoaiRegion]
+//output gptModelDeployment object = modelRegionMap[aoaiRegion]
 

@@ -126,7 +126,7 @@ resource appinsDiag 'Microsoft.ApiManagement/service/apis/diagnostics@2023-03-01
     frontend: {
       request: {
         body: { bytes: 8192 }
-        headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
+        headers:['Referer', 'X-Forwarded-For']
       }
       response: {
         body: { bytes: 8192 }
@@ -136,7 +136,7 @@ resource appinsDiag 'Microsoft.ApiManagement/service/apis/diagnostics@2023-03-01
     backend: {
       request: {
         body: { bytes: 8192 }
-        headers:['Referer', 'X-Forwarded-For', 'api-key', 'Authorization']
+        headers:['Referer', 'X-Forwarded-For']
       }
       response: {
         body: { bytes: 8192 }
