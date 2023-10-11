@@ -12,7 +12,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace client_app // Note: actual namespace depends on the project name.
 {
-    internal class Program
+    internal partial class Program
     {
         static async Task Main(string[] args)
         {
@@ -67,118 +67,6 @@ namespace client_app // Note: actual namespace depends on the project name.
 
         }
 
-        private static async Task CallOpenAIFuncCalling(string endpoint, string apikey)
-        {
-            var prompt = new ChatCompletionsOptions()
-            {
-                Messages = {
-                    new ChatMessage(ChatRole.System, @"お天気予報ボットです。ユーザーの指定した日付と場所の天気予報をお知らせしてください。"),
-                    new ChatMessage(ChatRole.User, @"明日の東京の天気は？"),
-                },
-                FunctionCall = FunctionDefinition.Auto,
-                Functions = {
-                    new FunctionDefinition("get_weather_forecast"){
-                        Description = "指定された日付と場所の天気予報を取得します。",
-                        Parameters = BinaryData.FromString(@"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""location"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""天気予報を取得する場所の地名""
-                                },
-                                ""date"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""天気予報を取得する日時""
-                                }
-                            },
-                            ""required"": [""location"", ""datetime""]
-                        }"),
-                    },
-                }
-            };
-            
-            Console.WriteLine("Calling {0}", endpoint);
-            await foreach(var response in CallOpenAI(endpoint, apikey, prompt, 1))
-            {
-                var raw = response.GetRawResponse();
-
-                Console.WriteLine("{0} {1} from {2} region",
-                raw.Status,
-                raw.ReasonPhrase,
-                raw.Headers.Where(h => h.Name == "x-ms-region").First().Value);
-
-                raw.Headers.OrderBy(h => h.Name).ToList().ForEach(h =>
-                {
-                    Console.WriteLine($"{h.Name}: {h.Value}");
-                });
-
-                Console.WriteLine();
-
-                using (var writer = new Utf8JsonWriter(Console.OpenStandardOutput(), new JsonWriterOptions() { Indented = true }))
-                {
-                    JsonSerializer.Serialize(writer, response.Value);
-                }
-            };
-        }
-
-        private static async Task CallOpenAIHello(string endpoint, string apikey, int loop)
-        {
-            var prompt = new ChatCompletionsOptions()
-            {
-                Messages = {
-                    new ChatMessage(ChatRole.System, @"You are an AI assistant that helps people find information."),
-                    new ChatMessage(ChatRole.User, @"Hello"),
-                }
-            };
-
-            Console.WriteLine("Calling {0}", endpoint);
-
-            if(loop == 1)
-            {
-                var response = await CallOpenAI(endpoint, apikey, prompt);
-                var raw = response.GetRawResponse();
-
-                Console.WriteLine("{0} {1} from {2} region",
-                    raw.Status,
-                    raw.ReasonPhrase,
-                    raw.Headers.Where(h => h.Name == "x-ms-region").First().Value);
-
-                raw.Headers.OrderBy(h => h.Name).ToList().ForEach(h =>
-                {
-                    Console.WriteLine($"{h.Name}: {h.Value}");
-                });
-
-                Console.WriteLine();
-
-                using (var writer = new Utf8JsonWriter(Console.OpenStandardOutput(), new JsonWriterOptions() { Indented = true }))
-                {
-                    JsonSerializer.Serialize(writer, response.Value);
-                }
-
-                return;
-            }
-            
-
-            await foreach(var response in CallOpenAI(endpoint, apikey, prompt, loop))
-            {
-                var raw = response.GetRawResponse();
-                Console.WriteLine("{0} {1} from {2} region",
-                    raw.Status,
-                    raw.ReasonPhrase,
-                    raw.Headers.Where(h => h.Name == "x-ms-region").First().Value);
-
-            };
-        }
-
-        //https://learn.microsoft.com/ja-jp/dotnet/api/overview/azure/ai.openai-readme?view=azure-dotnet-preview
-        private static async IAsyncEnumerable<Response<ChatCompletions>> CallOpenAI(string endpoint, string apikey, ChatCompletionsOptions prompt, int loop)
-        {
-            for (int idx = 0; idx < loop; idx++)
-            {
-                yield return await CallOpenAI(endpoint, apikey, prompt);
-            }
-        }
-
         private static async Task<Response<ChatCompletions>> CallOpenAI(string endpoint, string apikey, ChatCompletionsOptions prompt)
         {
             var uri = new Uri(endpoint);
@@ -191,11 +79,4 @@ namespace client_app // Note: actual namespace depends on the project name.
 
     }
 
-    public class MyTelemetryInitializer : ITelemetryInitializer
-    {
-        public void Initialize(ITelemetry telemetry)
-        {
-            telemetry.Context.Cloud.RoleName = "client_app";
-        }
-    }
 }
