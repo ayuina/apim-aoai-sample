@@ -1,0 +1,38 @@
+@model=g35t
+@version=2023-08-01-preview
+
+### CALL via APIM
+POST https://{{$dotenv APIM_NAME}}.azure-api.net/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+api-key: {{$dotenv APIM_KEY}}
+Content-Type: application/json
+
+{
+  "messages": [
+    {"role":"system","content":"You are an AI assistant that helps people find information."},
+    {"role":"user","content":"Who are you ?"}
+    ],
+  "max_tokens": 800,
+  "temperature": 0.7,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "top_p": 0.95,
+  "stop": null
+}
+
+### CALL OpenAI Direct
+POST https://{{$dotenv AOAI_NAME}}.openai.azure.com/openai/deployments/{{model}}/chat/completions?api-version={{version}} HTTP/1.1
+Content-Type: application/json
+api-key: {{$dotenv AOAI_KEY}}
+
+{
+  "messages": [
+    {"role":"system","content":"You are an AI assistant that helps people find information."},
+    {"role":"user","content":"Who are you ?"}
+    ],
+  "max_tokens": 800,
+  "temperature": 0.7,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "top_p": 0.95,
+  "stop": null
+}
