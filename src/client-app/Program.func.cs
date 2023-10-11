@@ -57,7 +57,7 @@ namespace client_app // Note: actual namespace depends on the project name.
             };
         }
 
-        private static async Task CallOpenAIFuncCalling(string endpoint, string apikey)
+        private static async Task CallOpenAIFuncCalling()
         {
             var prompt = new ChatCompletionsOptions()
             {
@@ -69,7 +69,7 @@ namespace client_app // Note: actual namespace depends on the project name.
             };
             AddFunctionDefinition(prompt);
             
-            var choice = await CallOpenAIFuncCalling(endpoint, apikey, prompt);
+            var choice = await CallOpenAIFuncCalling(prompt);
             while(choice.FinishReason == CompletionsFinishReason.FunctionCall)
             {
                 var funcResponse = await CallFunction(choice.Message.FunctionCall);
@@ -80,18 +80,18 @@ namespace client_app // Note: actual namespace depends on the project name.
                         Content = funcResponse
                     }
                 );
-                choice = await CallOpenAIFuncCalling(endpoint, apikey, prompt);
+                choice = await CallOpenAIFuncCalling(prompt);
             }
         }
 
-        private static async Task<ChatChoice> CallOpenAIFuncCalling(string endpoint, string apikey, ChatCompletionsOptions prompt)
+        private static async Task<ChatChoice> CallOpenAIFuncCalling(ChatCompletionsOptions prompt)
         {
-            Console.WriteLine("===== Calling {0} =====", endpoint);
+            Console.WriteLine("===== Calling {0} =====", _endpoint);
             prompt.Messages.ToList().ForEach(m => {
                 Console.WriteLine("{0} > {1}", m.Role, m.Content);
             });
 
-            var response = await CallOpenAI(endpoint, apikey, prompt);
+            var response = await CallOpenAI(prompt);
             var raw = response.GetRawResponse();
             Console.WriteLine("{0} {1} from {2} region",
                 raw.Status,

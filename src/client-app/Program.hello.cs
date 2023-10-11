@@ -15,7 +15,7 @@ namespace client_app // Note: actual namespace depends on the project name.
     internal partial class Program
     {
 
-        private static async Task CallOpenAIHello(string endpoint, string apikey, int loop)
+        private static async Task CallOpenAIHello(int loop)
         {
             var prompt = new ChatCompletionsOptions()
             {
@@ -25,11 +25,11 @@ namespace client_app // Note: actual namespace depends on the project name.
                 }
             };
 
-            Console.WriteLine("Calling {0}", endpoint);
+            Console.WriteLine("Calling {0}", _endpoint);
 
             if(loop == 1)
             {
-                var response = await CallOpenAI(endpoint, apikey, prompt);
+                var response = await CallOpenAI(prompt);
                 var raw = response.GetRawResponse();
 
                 Console.WriteLine("{0} {1} from {2} region",
@@ -51,26 +51,20 @@ namespace client_app // Note: actual namespace depends on the project name.
 
                 return;
             }
-            
-
-            await foreach(var response in CallOpenAI(endpoint, apikey, prompt, loop))
+            else
             {
-                var raw = response.GetRawResponse();
-                Console.WriteLine("{0} {1} from {2} region",
-                    raw.Status,
-                    raw.ReasonPhrase,
-                    raw.Headers.Where(h => h.Name == "x-ms-region").First().Value);
+                for (int idx = 0; idx < loop; idx++)
+                {
+                    var response = await CallOpenAI(prompt);
+                    var raw = response.GetRawResponse();
+                    Console.WriteLine("{0} {1} from {2} region",
+                        raw.Status,
+                        raw.ReasonPhrase,
+                        raw.Headers.Where(h => h.Name == "x-ms-region").First().Value);
 
-            };
-        }
-
-        //https://learn.microsoft.com/ja-jp/dotnet/api/overview/azure/ai.openai-readme?view=azure-dotnet-preview
-        private static async IAsyncEnumerable<Response<ChatCompletions>> CallOpenAI(string endpoint, string apikey, ChatCompletionsOptions prompt, int loop)
-        {
-            for (int idx = 0; idx < loop; idx++)
-            {
-                yield return await CallOpenAI(endpoint, apikey, prompt);
+                }
             }
+
         }
 
     }
