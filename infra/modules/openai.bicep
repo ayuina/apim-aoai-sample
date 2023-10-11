@@ -2,6 +2,7 @@ param postfix string
 param aoaiRegion string
 param logAnalyticsName string
 param enableManagedIdAuth bool
+param aoaiModelCapacity int
 
 var aoaiName = 'aoai-${postfix}'
 
@@ -43,7 +44,7 @@ resource chatgpt 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' =
   name: modelRegionMap[aoaiRegion].deploy
   sku: {
     name: 'Standard'
-    capacity: 10
+    capacity: aoaiModelCapacity
   }
   properties: {
     model: {

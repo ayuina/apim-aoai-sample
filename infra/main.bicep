@@ -4,6 +4,7 @@ param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
 //param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
 param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
 param enableManagedIdAuth bool = true
+param aoaiModelCapacity int = 40
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
@@ -33,6 +34,7 @@ module aoais './modules/openai.bicep' = [for aoaiRegion in aoaiRegions: {
     aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
     enableManagedIdAuth: enableManagedIdAuth
+    aoaiModelCapacity: aoaiModelCapacity
   }
 }]
 
