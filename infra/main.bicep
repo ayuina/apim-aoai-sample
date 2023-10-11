@@ -2,7 +2,7 @@
 param region string = resourceGroup().location
 param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
 //param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
-param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview']
+param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview', '2023-09-01-preview']
 param enableManagedIdAuth bool = true
 param aoaiModelCapacity int = 40
 
@@ -16,6 +16,7 @@ var aoaiSpecDocs = [
   loadTextContent('./openaispec/2023-06-01-preview.json')
   loadTextContent('./openaispec/2023-07-01-preview.json')
   loadTextContent('./openaispec/2023-08-01-preview.json')
+  loadTextContent('./openaispec/2023-09-01-preview.json')
 ]
 var targetSpecs = filter(aoaiSpecDocs, spec => contains(targetVersions, json(spec).info.version))
 

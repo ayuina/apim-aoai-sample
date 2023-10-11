@@ -7,7 +7,8 @@ $targets = @(
     '2023-03-15-preview', 
     '2023-06-01-preview', 
     '2023-07-01-preview', 
-    '2023-08-01-preview')
+    '2023-08-01-preview',
+    '2023-09-01-preview')
 
 $outputRoot = "$PSScriptRoot/../infra/openaispec"
 if(!(Test-Path $outputRoot)) {
