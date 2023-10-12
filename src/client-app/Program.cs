@@ -42,38 +42,48 @@ namespace client_app // Note: actual namespace depends on the project name.
             DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
             depModule.Initialize(appiConfig);
 
+            _endpoint = string.Format("https://{0}.azure-api.net/", config["APIM_NAME"]);
+            _apikey = config["APIM_KEY"] ?? "";
+            _model = config["AOAI_MODEL"] ?? "";
+
             var mode = config["mode"];
             var loop = string.IsNullOrEmpty(config["loop"]) ? 1 : int.Parse(config["loop"]?? "");
-            var apimurl = string.Format("https://{0}.azure-api.net/", config["APIM_NAME"]);
-            var apimkey = config["APIM_KEY"] ?? "";
-            var aoaiurl = string.Format("https://{0}.openai.azure.com/", config["AOAI_NAME"]);
-            var aoaikey = config["AOAI_KEY"] ?? "";
 
             switch (config["mode"]?.ToUpper())
             {
                 case "APIM":
-                    await CallOpenAIHello(apimurl, apimkey, loop);
+                    await CallOpenAIHello(loop);
                     break;
                 case "AOAI":
-                    await CallOpenAIHello(aoaiurl, aoaikey, loop);
+                    _endpoint = string.Format("https://{0}.openai.azure.com/", config["AOAI_NAME"]);
+                    _apikey = config["AOAI_KEY"] ?? "";
+                    await CallOpenAIHello(loop);
                     break;
                 case "FUNCCALL":
-                    await CallOpenAIFuncCalling(aoaiurl, aoaikey);
+                    await CallOpenAIFuncCalling();
                     break;
                 default:
                     Console.WriteLine("Please specify mode as APIM or AOAI");
                     break;
             }
-
         }
 
-        private static async Task<Response<ChatCompletions>> CallOpenAI(string endpoint, string apikey, ChatCompletionsOptions prompt)
+        private static string _endpoint = string.Empty;
+        private static string _apikey = string.Empty;
+        private static string _model = string.Empty;
+
+        private static async Task<Response<ChatCompletions>> CallOpenAI(ChatCompletionsOptions prompt)
+        {
+            return await CallOpenAI(_endpoint, _apikey, _model, prompt);
+        }
+
+        private static async Task<Response<ChatCompletions>> CallOpenAI(string endpoint, string apikey, string modelName, ChatCompletionsOptions prompt)
         {
             var uri = new Uri(endpoint);
             var cred = new AzureKeyCredential(apikey);
             var client = new OpenAIClient(uri, cred);
 
-            var response = await client.GetChatCompletionsAsync("g35t", prompt);
+            var response = await client.GetChatCompletionsAsync(modelName, prompt);
             return response;
         }
 

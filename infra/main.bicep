@@ -1,10 +1,9 @@
 
 param region string = resourceGroup().location
-param aoaiRegions array = ['eastus', 'westeurope', 'uksouth']
-//param aoaiRegions array = ['japaneast', 'eastus2', 'switzerlandnorth', 'australiaeast']
-param targetVersions array = ['2023-05-15', '2023-07-01-preview', '2023-08-01-preview', '2023-09-01-preview']
-param enableManagedIdAuth bool = true
-param aoaiModelCapacity int = 40
+param targetVersions array
+param enableManagedIdAuth bool
+param apimSku string
+param aoaiCluster object
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
@@ -28,14 +27,17 @@ module monitor './modules/monitor.bicep' = {
   }
 }
 
-module aoais './modules/openai.bicep' = [for aoaiRegion in aoaiRegions: {
+module aoais './modules/openai.bicep' = [for aoaiRegion in aoaiCluster.regions: {
   name: 'aoai-${aoaiRegion}'
   params:{
     postfix: '${aoaiRegion}-${postfix}'
     aoaiRegion: aoaiRegion
     logAnalyticsName: monitor.outputs.LogAnalyticsName
-    enableManagedIdAuth: enableManagedIdAuth
-    aoaiModelCapacity: aoaiModelCapacity
+    enableApikeyAuth: aoaiCluster.enableApikeyAuth
+    modelName: aoaiCluster.modelName
+    modelVersion: aoaiCluster.modelVersion
+    modelCapacity: aoaiCluster.modelCapacity    
+    modelDeploymentName: aoaiCluster.modelDeploymentName
   }
 }]
 
@@ -46,10 +48,11 @@ module apim './modules/apim-svc.bicep' = {
     region: region
     enableManagedIdAuth: enableManagedIdAuth
     logAnalyticsName: monitor.outputs.LogAnalyticsName
+    apimSku: apimSku
   }
 }
 
-module auth './modules/openai-auth-apim.bicep' = [for (aoaiRegion, idx) in aoaiRegions: if(enableManagedIdAuth) {
+module auth './modules/openai-auth-apim.bicep' = [for (aoaiRegion, idx) in aoaiCluster.regions : if(enableManagedIdAuth) {
   name: 'auth-${aoaiRegion}'
   params:{
     apimName: apim.outputs.apiManagementName
@@ -64,7 +67,9 @@ module aoai_api './modules/apim-openai-apidef.bicep' = {
     enableManagedIdAuth: enableManagedIdAuth
     targetVersionSpecs: targetSpecs
     aiLoggerName: apim.outputs.appinsightsLoggerName
-    aoaiNames: [for (aoaiRegion, idx) in aoaiRegions: aoais[idx].outputs.aoaiAccountName]
+    aoaiNames: [for (aoaiRegion, idx) in aoaiCluster.regions: aoais[idx].outputs.aoaiAccountName]
   }
 }
+
+output APIM_NAME string = apim.outputs.apiManagementName
 
