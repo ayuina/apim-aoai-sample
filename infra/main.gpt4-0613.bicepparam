@@ -10,7 +10,7 @@ param apimSku = 'Consumption'
 param aoaiCluster = {
   modelName: 'gpt-4'
   modelVersion: '0613'
-  modelCapacity: 40
+  modelCapacity: 10
   modelDeploymentName: 'g4'
   regions: [
     //'australiaeast'
