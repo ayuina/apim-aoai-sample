@@ -72,17 +72,9 @@ $region = 'japaneast'
 $rgName = 'demo0908-rg'
 
 az group create -l $region -n $rgName
-az deployment group create -g $rgName -f ./infra/main.bicep 
 
-# (Option) インポートする api-version を指定したい場合は以下のように実行します
-az deployment group create -g $rgName -f ./infra/main.bicep -p targetVersions="['2023-05-15', '2023-06-01-preview']"
-
-# (Option) Azure OpenAI Service をデプロイするリージョンを指定する場合には以下のように実行します。
-az deployment group create -g $rgName -f ./infra/main.bicep -p aoaiRegions="['japaneast', 'eastus2', 'switzerlandnorth']"
-
-# (Option) 既定では API Management > OpenAI のアクセスは Managed ID で認可を行っていますが、API キー認証でデプロイすることも可能です。
-az deployment group create -g $rgName -f ./infra/main.bicep -p enableManagedIdAuth=false
-
+# デプロイに使用するパラメタは .bicepparam ファイルを修正してください
+az deployment group create -g $rgName -f ./infra/main.bicep -p ./infra/main.gpt35-0613.bicepparam
 ```
 
 ### 複数バージョンの API 定義を確認
@@ -193,10 +185,11 @@ API Management と同様に診断ログの設定として Log Analytics Workspac
 
 現状 Azure OpenAI Service はリージョンによってデプロイできるモデルやバージョンにばらつきがあり、また各バージョンごとに利用可能な API が異なります。
 これらの組み合わせは頻繁に更新されていますので、[ドキュメントを参照して](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)相互に互換性のあるリージョンを選択するようにご注意ください。
+サブスクリプションによっては使用できないリージョンやモデルがある場合もあります。
 
 ## Azure OpenAI Service アクセス時の認証方式
 
-クライアントから API Management へのアクセスには API Management から発行されたサブスクリプションの API キーを利用していますば、
+クライアントから API Management へのアクセスには API Management から発行されたサブスクリプションの API キーを利用していますが、
 API Management から Azure OpenAI Service へのアクセスには二つの認証方式に対応しています。
 
 ### Mangaged Identity を利用する
@@ -220,7 +213,7 @@ Azure OpenAI Service の `アクセス制御` を確認すると、API Managemen
 
 ### API キーを利用する
 
-デプロイ時に Managed Identity を無効（`-p enableManagedIdAuth=false`） にした場合には、上記の `choose/when/@condition` が `false` になる用に `AOAIAuthMode` の値を設定しています。
+デプロイ時に Managed Identity 認証を無効（`enableManagedIdAuth=false`） にした場合には、上記の `choose/when/@condition` が `false` になるように `AOAIAuthMode` の値を設定しています。
 この場合 API Management から Azure OpenAI Service へのアクセスには API キーを利用する必要がありますが、
 これらの値は API Management の `名前付きの値` および `バックエンド` の `認証資格情報` として設定されています。
 
@@ -229,7 +222,10 @@ Azure OpenAI Service の `アクセス制御` を確認すると、API Managemen
 |名前付きの値|![Azure OpenAI Services registered as named value of API Management](./images/namedvalue-openai-apikey.png)|
 |バックエンド|![Azure OpenAI Services registerd as backend of API Management](./images/backend-openai-apikey.png)|
 
-また API Management の Managed Identity は無効になっており、RBAC によるアクセス許可も設定されていません。
+また API Management の Managed Identity は無効になっており、RBAC による Azure OpenAI サービスへのアクセス許可も設定されていません。
+このアクセス許可を付与する操作は [Owner](https://learn.microsoft.com/ja-jp/azure/role-based-access-control/built-in-roles#owner) や [User Access Administrator](https://learn.microsoft.com/ja-jp/azure/role-based-access-control/built-in-roles#user-access-administrator) に含まれる権限が必要になります。
+[Contributor](https://learn.microsoft.com/ja-jp/azure/role-based-access-control/built-in-roles#contributor) などのロールでは権限が不足していますのでデプロイ時にエラーになります。
+その場合は Managed Identity 認証を無効（`enableManagedIdAuth=false`）にして API キーによる認証を使用してください。
 
 ## まとめ
 
