@@ -3,7 +3,10 @@ param region string = resourceGroup().location
 param targetVersions array
 param enableManagedIdAuth bool
 param apimSku string
+param apimPublisherEmail string
+param apimPublisherName string
 param aoaiCluster object
+
 
 var postfix = toLower(uniqueString(subscription().id, region, resourceGroup().name))
 var aoaiSpecDocs = [
@@ -49,6 +52,8 @@ module apim './modules/apim-svc.bicep' = {
     enableManagedIdAuth: enableManagedIdAuth
     logAnalyticsName: monitor.outputs.LogAnalyticsName
     apimSku: apimSku
+    publisherEmail: apimPublisherEmail
+    publisherName: apimPublisherName
   }
 }
 

@@ -9,6 +9,9 @@ param targetVersions = [
 ]
 param enableManagedIdAuth = true
 param apimSku = 'StandardV2'
+param apimPublisherEmail = 'admin@example.com'
+param apimPublisherName = 'admin'
+
 param aoaiCluster = {
   modelName: 'gpt-35-turbo'
   modelVersion: '0301'

@@ -3,6 +3,8 @@ param region string
 param logAnalyticsName string
 param enableManagedIdAuth bool
 param apimSku string
+param publisherName string
+param publisherEmail string
 
 var apimName = 'apim-${postfix}'
 var apimid = enableManagedIdAuth ? { type: 'SystemAssigned' } : null
@@ -32,8 +34,8 @@ resource apiman 'Microsoft.ApiManagement/service@2023-03-01-preview' = {
     capacity: apimSku == 'Consumption' ? 0 : 1
   }
   properties: {
-    publisherName: 'demo'
-    publisherEmail: 'demo@sample.com'
+    publisherName: publisherName
+    publisherEmail: publisherEmail
   }
   identity: apimid
 
